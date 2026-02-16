@@ -1,3 +1,23 @@
+
+## movieflix-react-app – Movie Streaming UI Clone --
+
+## A modern Netflix-inspired movie search application built using ReactJS and Tailwind CSS. 
+  Features include:
+
+  • Movie search using TMDB API  
+  • Cinematic movie details page  
+  • Watchlist with Context API  
+  • Persistent storage using localStorage  
+  • Responsive OTT-style UI  
+
+## Tech Stack:
+ React, React Router, Context API, Tailwind CSS, TMDB API
+
+## Author 🥷 ---
+
+## Chetan sharma
+
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
@@ -68,3 +88,5 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+
+
