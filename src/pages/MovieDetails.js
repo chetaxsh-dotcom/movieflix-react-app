@@ -93,7 +93,7 @@ backgroundPosition:"center"
 
 <button
 onClick={()=>navigate("/")}
-className="mb-6 bg-gray-800 bg-red-600 px-4 py-2 rounded"
+className=" mb-6 bg-gray-800 bg-red-600 px-4 py-2 rounded"
 >
 ← Home
 </button>
@@ -133,6 +133,4 @@ Add to Watchlist
 </div>
 
 );
-
 }
-
