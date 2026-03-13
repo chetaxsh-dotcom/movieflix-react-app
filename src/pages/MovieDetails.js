@@ -1,105 +1,138 @@
-import React, { useEffect, useState, useContext } from "react";
-import { useParams } from "react-router-dom";
-import { WatchlistContext } from "../context/WatchlistContext";
 
-function MovieDetails() {
-  const { id } = useParams();
-  const { addToWatchlist } = useContext(WatchlistContext);
+import { useEffect, useState } from "react";
+import { useParams,useNavigate } from "react-router-dom";
+import MovieRow from "../components/MovieRow";
 
-  const [movie, setMovie] = useState(null);
-  const [credits, setCredits] = useState(null);
+const API_KEY="77794b003c88f0df6567795dd3310419";
+const BASE_URL="https://api.themoviedb.org/3";
 
-  const API_KEY = "77794b003c88f0df6567795dd3310419";
+export default function MovieDetails(){
 
-  useEffect(() => {
-    fetch(
-      `https://api.themoviedb.org/3/movie/${id}?api_key=${API_KEY}&language=en-US`
-    )
-      .then((res) => res.json())
-      .then((data) => setMovie(data));
+const { id } = useParams();
+const navigate = useNavigate();
 
-    fetch(
-      `https://api.themoviedb.org/3/movie/${id}/credits?api_key=${API_KEY}`
-    )
-      .then((res) => res.json())
-      .then((data) => setCredits(data));
-  }, [id]);
+const [movie,setMovie] = useState(null);
+const [director,setDirector] = useState("");
+const [country,setCountry] = useState("");
+const [related,setRelated] = useState([]);
 
-  if (!movie) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center text-white text-xl font-semibold">
-      Loading movie details...
-      </div>
+useEffect(()=>{
 
-    );
-  }
+const fetchMovie = async()=>{
 
-  const director =
-    credits?.crew?.find((person) => person.job === "Director")?.name ||
-    "Not Available";
+const res = await fetch(`${BASE_URL}/movie/${id}?api_key=${API_KEY}`);
+const data = await res.json();
 
-  return (
-    <div className="relative min-h-screen bg-black text-white overflow-hidden">
+setMovie(data);
 
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-cover bg-center opacity-70"
-        style={{
-          backgroundImage: `url(https://image.tmdb.org/t/p/original${movie.backdrop_path})`,
-        }}
-      />
-
-      {/* Dark Gradient Overlay (lighter than before) */}
-      <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent"></div>
-
-      {/* Content */}
-      <div className="relative z-10 flex items-start justify-between px-16 pt-20">
-
-        {/* LEFT SIDE DETAILS */}
-        <div className="max-w-2xl">
-
-          <h1 className="text-5xl font-extrabold mb-6 leading-tight">
-            {movie.title}
-          </h1>
-
-          <div className="flex gap-6 text-gray-200 font-semibold mb-6">
-            <span>⭐ {movie.vote_average}</span>
-            <span>{movie.release_date}</span>
-            <span>{movie.runtime} min</span>
-          </div>
-
-          <div className="space-y-2 text-gray-200 font-medium mb-6">
-            <p>
-              <span className="text-gray-400">Country:</span>{" "}
-              {movie.production_countries?.map((c) => c.name).join(", ") || "N/A"}
-            </p>
-
-            <p>
-              <span className="text-gray-400">Director:</span> {director}
-            </p>
-
-            <p>
-              <span className="text-gray-400">Language:</span>{" "}
-              {movie.spoken_languages?.[0]?.english_name || "N/A"}
-            </p>
-          </div>
-
-          <p className="text-lg text-gray-100 leading-relaxed mb-8 font-medium">
-            {movie.overview}
-          </p>
-
-          <button
-            onClick={() => addToWatchlist(movie)}
-            className="px-8 py-3 bg-red-600 hover:bg-red-700 rounded-lg font-semibold transition"
-          >
-            + Add to Watchlist
-          </button>
-        </div>
-
-
-      </div>
-    </div>
-  );
+if(data.production_countries?.length){
+setCountry(data.production_countries[0].name);
 }
 
-export default MovieDetails;
+};
+
+const fetchCredits = async()=>{
+
+const res = await fetch(`${BASE_URL}/movie/${id}/credits?api_key=${API_KEY}`);
+const data = await res.json();
+
+const dir = data.crew.find(p=>p.job==="Director");
+
+if(dir){
+setDirector(dir.name);
+}
+
+};
+
+const fetchRelated = async()=>{
+
+const res = await fetch(`${BASE_URL}/movie/${id}/similar?api_key=${API_KEY}`);
+const data = await res.json();
+
+let movies = data.results;
+
+if(!movies || movies.length===0){
+
+const fallback = await fetch(`${BASE_URL}/trending/movie/week?api_key=${API_KEY}`);
+const fallbackData = await fallback.json();
+
+movies = fallbackData.results;
+
+}
+
+setRelated(movies);
+
+};
+
+fetchMovie();
+fetchCredits();
+fetchRelated();
+
+},[id]);
+
+if(!movie){
+return <p className="text-white p-10">Loading...</p>;
+}
+
+return(
+
+<div className="bg-black text-white min-h-screen">
+
+<div
+className="relative h-[80vh] flex items-center"
+style={{
+backgroundImage:`url(https://image.tmdb.org/t/p/original${movie.backdrop_path})`,
+backgroundSize:"cover",
+backgroundPosition:"center"
+}}
+>
+
+<div className="absolute inset-0 bg-black/70"></div>
+
+<div className="relative z-10 px-10 max-w-2xl">
+
+<button
+onClick={()=>navigate("/")}
+className="mb-6 bg-gray-800 bg-red-600 px-4 py-2 rounded"
+>
+← Home
+</button>
+
+<h1 className="text-5xl font-bold mb-4">
+{movie.title}
+</h1>
+
+<p className="text-gray-300 text-xl mb-4">
+{movie.overview}
+</p>
+
+<p>⭐ {movie.vote_average?.toFixed(1)} / 10</p>
+
+<p>Director:- {director}</p>
+
+<p>Country:- {country}</p>
+
+<p>Language:- {movie.spoken_languages?.[0]?.english_name}</p>
+
+<p>Release Date:- {movie.release_date}</p>
+
+<button className="mt-4 bg-red-600 px-5 py-2 rounded">
+Add to Watchlist
+</button>
+
+</div>
+
+</div>
+
+<div className="mt-10">
+
+<MovieRow title="Related Movies" movies={related}/>
+
+</div>
+
+</div>
+
+);
+
+}
+

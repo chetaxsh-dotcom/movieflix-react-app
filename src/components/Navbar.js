@@ -25,19 +25,7 @@ export default function Navbar() {
       {/* Search - Center */}
       <div className="w-full flex justify-center">
         <form onSubmit={handleSearch} className="flex items-center">
-          <input
-            type="text"
-            placeholder="Search movies..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="w-80 px-4 py-2 rounded-l-md bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-red-600"
-          />
-          <button
-            type="submit"
-            className="bg-red-600 px-4 py-2 rounded-r-md hover:bg-red-700 transition"
-          >
-            Search
-          </button>
+          
         </form>
       </div>
 

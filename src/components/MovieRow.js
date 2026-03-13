@@ -2,9 +2,14 @@ import { useRef } from "react";
 import MovieCard from "./MovieCard";
 
 export default function MovieRow({ title, movies }) {
+
   const rowRef = useRef(null);
 
+  if (!movies || movies.length === 0) return null;
+
   const scrollLeft = () => {
+    if (!rowRef.current) return;
+
     rowRef.current.scrollBy({
       left: -400,
       behavior: "smooth",
@@ -12,6 +17,8 @@ export default function MovieRow({ title, movies }) {
   };
 
   const scrollRight = () => {
+    if (!rowRef.current) return;
+
     rowRef.current.scrollBy({
       left: 400,
       behavior: "smooth",
@@ -20,7 +27,8 @@ export default function MovieRow({ title, movies }) {
 
   return (
     <div className="relative mb-10 group">
-      {/* Row Title */}
+
+      {/* ROW TITLE */}
       <h2 className="text-white text-2xl font-semibold mb-4 px-6">
         {title}
       </h2>
@@ -40,7 +48,7 @@ export default function MovieRow({ title, movies }) {
         ref={rowRef}
         className="flex space-x-4 overflow-x-scroll scrollbar-hide px-14 scroll-smooth"
       >
-        {movies?.map((movie) => (
+        {movies.map((movie) => (
           <MovieCard key={movie.id} movie={movie} />
         ))}
       </div>
@@ -54,6 +62,7 @@ export default function MovieRow({ title, movies }) {
       >
         {">"}
       </button>
+
     </div>
   );
 }

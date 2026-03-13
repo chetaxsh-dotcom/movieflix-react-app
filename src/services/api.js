@@ -1,32 +1,38 @@
 import axios from "axios";
 
-const API_KEY = process.env.REACT_APP_OMDB_KEY;
-const BASE_URL = "https://www.omdbapi.com/";
-
-
-console.log("API KEY:", API_KEY);
-
-export const searchMovies = async (searchTerm, page = 1, type = "") => {
-  const response = await axios.get(BASE_URL, {
-    params: {
-      apikey: API_KEY,
-      s: searchTerm,
-      page: page,
-      type: type,
-    },
-  });
-
-  return response.data;
-};
+const API_KEY = "77794b003c88f0df6567795dd3310419";
+const BASE_URL = "https://api.themoviedb.org/3";
 
 export const getMovieDetails = async (id) => {
-  const response = await axios.get(BASE_URL, {
+  const res = await axios.get(`${BASE_URL}/movie/${id}`, {
+    params: { api_key: API_KEY },
+  });
+  return res.data;
+};
+
+export const getSimilarMovies = async (id) => {
+  const res = await axios.get(`${BASE_URL}/movie/${id}/similar`, {
+    params: { api_key: API_KEY },
+  });
+  return res.data.results;
+};
+
+export const searchMovies = async (query, page = 1) => {
+  const res = await axios.get(`${BASE_URL}/search/movie`, {
     params: {
-      apikey: API_KEY,
-      i: id,
-      plot: "full",
+      api_key: API_KEY,
+      query,
+      page,
     },
   });
 
-  return response.data;
+  return res.data;
+};
+
+export const getMovieCredits = async (id) => {
+  const res = await axios.get(`${BASE_URL}/movie/${id}/credits`, {
+    params: { api_key: API_KEY },
+  });
+
+  return res.data;
 };
