@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 
-const SearchBar = ({ onSearch }) => {
+const SearchBar  = ({ onSearch }) => {
 
   const [input, setInput] = useState("");
   const [type, setType] = useState("");
@@ -9,9 +9,9 @@ const SearchBar = ({ onSearch }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!input.trim()) return;
+    onSearch(input.trim(), type);
+    setInput(""); // optional (clear after search)
 
-    onSearch(input, type);
   };
 
   return (

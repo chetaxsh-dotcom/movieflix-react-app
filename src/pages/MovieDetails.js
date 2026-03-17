@@ -1,136 +1,159 @@
-
 import { useEffect, useState } from "react";
-import { useParams,useNavigate } from "react-router-dom";
-import MovieRow from "../components/MovieRow";
+import { useParams, Link } from "react-router-dom";
 
-const API_KEY="77794b003c88f0df6567795dd3310419";
-const BASE_URL="https://api.themoviedb.org/3";
+const API_KEY = "77794b003c88f0df6567795dd3310419";
+const BASE_URL = "https://api.themoviedb.org/3";
+const IMG_URL = "https://image.tmdb.org/t/p/original";
 
-export default function MovieDetails(){
+export default function MovieDetails() {
 
-const { id } = useParams();
-const navigate = useNavigate();
+  const { id } = useParams();
 
-const [movie,setMovie] = useState(null);
-const [director,setDirector] = useState("");
-const [country,setCountry] = useState("");
-const [related,setRelated] = useState([]);
+  const [movie, setMovie] = useState(null);
+  const [similar, setSimilar] = useState([]);
+  const [credits, setCredits] = useState({});
+  const [page, setPage] = useState(1);
 
-useEffect(()=>{
+  useEffect(() => {
 
-const fetchMovie = async()=>{
+    const fetchData = async () => {
+      try {
 
-const res = await fetch(`${BASE_URL}/movie/${id}?api_key=${API_KEY}`);
-const data = await res.json();
+        // 🎬 Movie Details
+        const res1 = await fetch(`${BASE_URL}/movie/${id}?api_key=${API_KEY}`);
+        const data1 = await res1.json();
+        setMovie(data1);
 
-setMovie(data);
+        // 👥 Credits
+        const res2 = await fetch(`${BASE_URL}/movie/${id}/credits?api_key=${API_KEY}`);
+        const data2 = await res2.json();
+        setCredits(data2);
 
-if(data.production_countries?.length){
-setCountry(data.production_countries[0].name);
-}
+        // 🎞️ Similar Movies (with pagination)
+        const res3 = await fetch(`${BASE_URL}/movie/${id}/similar?api_key=${API_KEY}&page=${page}`);
+        const data3 = await res3.json();
+        setSimilar(data3.results || []);
 
-};
+      } catch (error) {
+        console.error("Error fetching details:", error);
+      }
+    };
 
-const fetchCredits = async()=>{
+    fetchData();
 
-const res = await fetch(`${BASE_URL}/movie/${id}/credits?api_key=${API_KEY}`);
-const data = await res.json();
+  }, [id, page]);
 
-const dir = data.crew.find(p=>p.job==="Director");
+  if (!movie) return <p className="text-white p-10">Loading...</p>;
 
-if(dir){
-setDirector(dir.name);
-}
+  // 🎬 Director
+  const director = credits.crew?.find(c => c.job === "Director");
 
-};
+  // 🌍 Country
+  const country = movie.production_countries?.[0]?.name;
 
-const fetchRelated = async()=>{
+  // 📅 Year
+  const year = movie.release_date?.split("-")[0];
 
-const res = await fetch(`${BASE_URL}/movie/${id}/similar?api_key=${API_KEY}`);
-const data = await res.json();
+  // 🌐 Language mapping
+  const languageMap = {
+    en: "English",
+    hi: "Hindi",
+    fr: "French",
+    es: "Spanish",
+    ja: "Japanese",
+  };
 
-let movies = data.results;
+  const language =
+    languageMap[movie.original_language] || movie.original_language;
 
-if(!movies || movies.length===0){
+  // ⭐ Rating
+  const rating = movie.vote_average?.toFixed(1);
 
-const fallback = await fetch(`${BASE_URL}/trending/movie/week?api_key=${API_KEY}`);
-const fallbackData = await fallback.json();
+  return (
+    <div className="text-white bg-black min-h-screen">
 
-movies = fallbackData.results;
+      {/* 🔥 BACKDROP */}
+      <div
+        className="h-[80vh] bg-cover bg-center flex items-end"
+        style={{
+          backgroundImage: `
+          linear-gradient(to top, rgba(0,0,0,0.95), rgba(0,0,0,0.6)),
+          url(${IMG_URL}${movie.backdrop_path})
+          `
+        }}
+      >
 
-}
+        <div className="p-10 max-w-2xl">
 
-setRelated(movies);
+          <h1 className="text-4xl font-bold">{movie.title}</h1>
 
-};
+          <p className="mt-4 text-gray-300">
+            {movie.overview || "No description available."}
+          </p>
 
-fetchMovie();
-fetchCredits();
-fetchRelated();
+          <div className="mt-4 space-y-1 text-gray-300">
 
-},[id]);
+            <p>⭐ Rating: {rating}</p>
+            <p>📅 Year: {year || "N/A"}</p>
+            <p>🎬 Director: {director?.name || "N/A"}</p>
+            <p>🌍 Country: {country || "N/A"}</p>
+            <p>🌐 Language: {language}</p>
 
-if(!movie){
-return <p className="text-white p-10">Loading...</p>;
-}
+          </div>
 
-return(
+          <Link
+            to="/"
+            className="inline-block mt-5 bg-red-600 px-5 py-2 rounded hover:bg-red-700"
+          >
+            ⬅ Back to Home
+          </Link>
 
-<div className="bg-black text-white min-h-screen">
+        </div>
+      </div>
 
-<div
-className="relative h-[80vh] flex items-center"
-style={{
-backgroundImage:`url(https://image.tmdb.org/t/p/original${movie.backdrop_path})`,
-backgroundSize:"cover",
-backgroundPosition:"center"
-}}
->
+      {/* 🎞️ RELATED MOVIES */}
+      <div className="p-6 bg-black">
 
-<div className="absolute inset-0 bg-black/70"></div>
+        <h2 className="text-2xl mb-4">Related Movies</h2>
 
-<div className="relative z-10 px-10 max-w-2xl">
+        <div className="flex overflow-x-scroll gap-5 scrollbar-hide">
 
-<button
-onClick={()=>navigate("/")}
-className=" mb-6 bg-gray-800 bg-red-600 px-4 py-2 rounded"
->
-← Home
-</button>
+          {similar.map((m) => (
+            <Link to={`/movie/${m.id}`} key={m.id}>
+            <img
+            src={`https://image.tmdb.org/t/p/w300${m.poster_path}`}
+            alt={m.title}
+            className="min-w-[180px] md:min-w-[220px] lg:min-w-[260px] h-[260px] md:h-[320px] lg:h-[360px] object-cover rounded-lg cursor-pointer hover:scale-110 transition duration-300"
+                    />
+            </Link>
+          ))};
 
-<h1 className="text-5xl font-bold mb-4">
-{movie.title}
-</h1>
+            </div>
 
-<p className="text-gray-300 text-xl mb-4">
-{movie.overview}
-</p>
+        {/* 🔥 PAGINATION */}
+        <div className="flex justify-center gap-6 mt-10">
 
-<p>⭐ {movie.vote_average?.toFixed(1)} / 10</p>
+          <button
+            onClick={() => setPage(page - 1)}
+            disabled={page === 1}
+            className="bg-gray-800 px-4 py-2 rounded"
+          >
+            Prev
+          </button>
 
-<p>Director:- {director}</p>
+          <span>{page}</span>
 
-<p>Country:- {country}</p>
+          <button
+            onClick={() => setPage(page + 1)}
+            className="bg-gray-800 px-4 py-2 rounded"
+          >
+            Next
+          </button>
 
-<p>Language:- {movie.spoken_languages?.[0]?.english_name}</p>
+        </div>
 
-<p>Release Date:- {movie.release_date}</p>
+      </div>
 
-<button className="mt-4 bg-red-600 px-5 py-2 rounded">
-Add to Watchlist
-</button>
-
-</div>
-
-</div>
-
-<div className="mt-10">
-
-<MovieRow title="Related Movies" movies={related}/>
-
-</div>
-
-</div>
-
-);
+    </div>
+  );
 }

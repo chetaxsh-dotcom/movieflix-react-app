@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import SearchBar from "../components/SearchBar";
 import MovieRow from "../components/MovieRow";
@@ -21,12 +20,13 @@ const [isSearching,setIsSearching] = useState(false);
 const [page,setPage] = useState(1);
 
 const fetchMovies = async(url,setter)=>{
-
-const res = await fetch(url);
-const data = await res.json();
-
-setter(data.results || []);
-
+  try{
+    const res = await fetch(url);
+    const data = await res.json();
+    setter(data.results || []);
+  }catch(err){
+    console.error(err);
+  }
 };
 
 useEffect(()=>{
@@ -45,19 +45,37 @@ fetchMovies(`${BASE_URL}/discover/movie?api_key=${API_KEY}&with_genres=16&page=$
 
 },[page]);
 
-const handleSearch = async(query,type)=>{
+// 🔥 FINAL SEARCH FIX
+const handleSearch = async (query, type) => {
 
-let url = `${BASE_URL}/search/movie?api_key=${API_KEY}&query=${query}`;
+if (!query && !type) return;
 
-if(type){
-url += `&with_genres=${type}`;
+try {
+
+let url = "";
+
+if(query){
+  url = `${BASE_URL}/search/movie?api_key=${API_KEY}&query=${query}`;
+}else{
+  url = `${BASE_URL}/discover/movie?api_key=${API_KEY}&with_genres=${type}`;
 }
 
 const res = await fetch(url);
 const data = await res.json();
 
-setSearchResults(data.results || []);
+let results = data.results || [];
+
+// 🔥 combine filter + search
+if(query && type){
+  results = results.filter(movie => movie.genre_ids?.includes(Number(type)));
+}
+
+setSearchResults(results);
 setIsSearching(true);
+
+} catch (err) {
+console.error(err);
+}
 
 };
 
@@ -71,20 +89,15 @@ return(
 
 <MovieRow title="Search Results" movies={searchResults}/>
 
-):(
+):( 
 
 <>
 
 <MovieRow title="Trending Now" movies={trending}/>
-
 <MovieRow title="Action Movies" movies={action}/>
-
 <MovieRow title="Comedy Movies" movies={comedy}/>
-
 <MovieRow title="Horror Movies" movies={horror}/>
-
 <MovieRow title="Crime & Mystery" movies={crime}/>
-
 <MovieRow title="Animation Movies" movies={animation}/>
 
 <div className="flex justify-center gap-6 mt-10">
@@ -97,7 +110,7 @@ className="bg-gray-800 px-4 py-2 rounded"
 Prev
 </button>
 
-<span className="text-lg">{page}</span>
+<span>{page}</span>
 
 <button
 onClick={()=>setPage(page+1)}
@@ -116,4 +129,4 @@ Next
 
 );
 
-};
+}
