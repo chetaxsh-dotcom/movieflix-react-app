@@ -10,7 +10,7 @@ useEffect(()=>{
   if(type){
     onSearch(query,type);
   }
-},[type]);
+},[type, query, onSearch]);
 
 const handleSubmit = (e) => {
   e.preventDefault();

@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import SearchBar from "../components/SearchBar";
 import MovieRow from "../components/MovieRow";
+import { useCallback } from "react";
+
 
 const API_KEY = "77794b003c88f0df6567795dd3310419";
 const BASE_URL = "https://api.themoviedb.org/3";
@@ -108,11 +110,11 @@ fetchSearch();
 },[query,type,page]);
 
 //  SEARCHBAR INPUT HANDLE
-const handleSearch = (q,t)=>{
+const handleSearch = useCallback((q,t)=>{
 setQuery(q);
 setType(t);
 setPage(1); // reset page
-};
+},[]);
 
 return(
 
