@@ -13,12 +13,18 @@ const [comedy,setComedy] = useState([]);
 const [horror,setHorror] = useState([]);
 const [crime,setCrime] = useState([]);
 const [animation,setAnimation] = useState([]);
+const [drama,setDrama] = useState([]);
+
+//  MAIN STATES
+const [query,setQuery] = useState("");
+const [type,setType] = useState("");
 
 const [searchResults,setSearchResults] = useState([]);
 const [isSearching,setIsSearching] = useState(false);
 
 const [page,setPage] = useState(1);
 
+// 🎬 CATEGORY FETCH
 const fetchMovies = async(url,setter)=>{
   try{
     const res = await fetch(url);
@@ -29,6 +35,7 @@ const fetchMovies = async(url,setter)=>{
   }
 };
 
+// 🎬 LOAD CATEGORY ROWS
 useEffect(()=>{
 
 fetchMovies(`${BASE_URL}/trending/movie/week?api_key=${API_KEY}&page=${page}`,setTrending);
@@ -43,21 +50,28 @@ fetchMovies(`${BASE_URL}/discover/movie?api_key=${API_KEY}&with_genres=80,9648&p
 
 fetchMovies(`${BASE_URL}/discover/movie?api_key=${API_KEY}&with_genres=16&page=${page}`,setAnimation);
 
+fetchMovies(`${BASE_URL}/discover/movie?api_key=${API_KEY}&with_genres=18&page=${page}`,setDrama);
+
 },[page]);
 
-// 🔥 FINAL SEARCH FIX
-const handleSearch = async (query, type) => {
+//  MAIN SEARCH + FILTER LOGIC (AUTO RUN)
+useEffect(()=>{
 
-if (!query && !type) return;
+if(!query && !type){
+  setIsSearching(false);
+  return;
+}
 
-try {
+const fetchSearch = async()=>{
+
+try{
 
 let url = "";
 
 if(query){
-  url = `${BASE_URL}/search/movie?api_key=${API_KEY}&query=${query}`;
+  url = `${BASE_URL}/search/movie?api_key=${API_KEY}&query=${query}&page=${page}`;
 }else{
-  url = `${BASE_URL}/discover/movie?api_key=${API_KEY}&with_genres=${type}`;
+  url = `${BASE_URL}/discover/movie?api_key=${API_KEY}&with_genres=${type}&page=${page}`;
 }
 
 const res = await fetch(url);
@@ -65,18 +79,39 @@ const data = await res.json();
 
 let results = data.results || [];
 
-// 🔥 combine filter + search
+//  NO filter() used (as per requirement)
 if(query && type){
-  results = results.filter(movie => movie.genre_ids?.includes(Number(type)));
+
+let filtered = [];
+
+for(let i=0;i<results.length;i++){
+  if(results[i].genre_ids?.includes(Number(type))){
+    filtered.push(results[i]);
+  }
+}
+
+results = filtered;
+
 }
 
 setSearchResults(results);
 setIsSearching(true);
 
-} catch (err) {
-console.error(err);
+}catch(err){
+console.error("Search error:",err);
 }
 
+};
+
+fetchSearch();
+
+},[query,type,page]);
+
+//  SEARCHBAR INPUT HANDLE
+const handleSearch = (q,t)=>{
+setQuery(q);
+setType(t);
+setPage(1); // reset page
 };
 
 return(
@@ -99,8 +134,14 @@ return(
 <MovieRow title="Horror Movies" movies={horror}/>
 <MovieRow title="Crime & Mystery" movies={crime}/>
 <MovieRow title="Animation Movies" movies={animation}/>
+<MovieRow title="Drama Movies" movies={drama}/>
 
-<div className="flex justify-center gap-6 mt-10">
+</>
+
+)}
+
+{/*  PAGINATION (WORKS FOR BOTH) */}
+<div className="flex justify-center gap-6 mt-10 pb-10">
 
 <button
 onClick={()=>setPage(page-1)}
@@ -120,10 +161,6 @@ Next
 </button>
 
 </div>
-
-</>
-
-)}
 
 </div>
 

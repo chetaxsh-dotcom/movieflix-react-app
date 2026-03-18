@@ -1,64 +1,57 @@
+import { useState, useEffect } from "react";
 
-import { useState } from "react";
+export default function SearchBar({ onSearch }) {
 
-const SearchBar  = ({ onSearch }) => {
+const [query,setQuery] = useState("");
+const [type,setType] = useState("");
 
-  const [input, setInput] = useState("");
-  const [type, setType] = useState("");
+//  AUTO SEARCH WHEN FILTER CHANGES
+useEffect(()=>{
+  if(type){
+    onSearch(query,type);
+  }
+},[type]);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    onSearch(input.trim(), type);
-    setInput(""); // optional (clear after search)
-
-  };
-
-  return (
-    <form
-      onSubmit={handleSubmit}
-      className="flex justify-center mt-6 gap-3"
-    >
-
-      <div className="relative w-full max-w-xl">
-
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-          🔍
-        </span>
-
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Search movies..."
-          className="w-full pl-10 pr-4 py-3 rounded-lg bg-gray-800 text-white"
-        />
-
-      </div>
-
-      <select
-        value={type}
-        onChange={(e) => setType(e.target.value)}
-        className="bg-gray-800 text-white px-4 py-3 rounded-lg"
-      >
-        <option value="">All</option>
-        <option value="28">Action</option>
-        <option value="35">Comedy</option>
-        <option value="27">Horror</option>
-        <option value="80">Crime</option>
-        <option value="16">Animation</option>
-      </select>
-
-      <button
-        type="submit"
-        className="bg-red-600 px-5 py-3 rounded-lg text-white"
-      >
-        Search
-      </button>
-
-    </form>
-  );
+const handleSubmit = (e) => {
+  e.preventDefault();
+  onSearch(query,type);
 };
 
-export default SearchBar;
+return(
 
+<form onSubmit={handleSubmit} className="flex gap-4 justify-center mb-6">
+
+<input
+type="text"
+placeholder="Search movies..."
+value={query}
+onChange={(e)=>setQuery(e.target.value)}
+className="px-4 py-2 rounded bg-gray-900 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-white-500" 
+/>
+
+<select
+value={type}
+onChange={(e)=>setType(e.target.value)}
+className="px-4 py-2 rounded bg-gray-900 text- border-gray-700 focus:ouline-none focus:ring-2 focus:ring-white-700 "
+>
+
+<option value="">All</option>
+<option value="28">Action</option>
+<option value="35">Comedy</option>
+<option value="27">Horror</option>
+<option value="80">Crime</option>
+<option value="16">Animation</option>
+<option value="18">Drama</option>
+
+
+</select>
+
+<button className="bg-red-600 px-4 py-2 rounded hover:bg-red-700 transition">
+Search
+</button>
+
+</form>
+
+);
+
+}

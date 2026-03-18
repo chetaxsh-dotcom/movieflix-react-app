@@ -72,7 +72,7 @@ export default function MovieDetails() {
   return (
     <div className="text-white bg-black min-h-screen">
 
-      {/* 🔥 BACKDROP */}
+      {/*  BACKDROP */}
       <div
         className="h-[80vh] bg-cover bg-center flex items-end"
         style={{
@@ -130,7 +130,7 @@ export default function MovieDetails() {
 
             </div>
 
-        {/* 🔥 PAGINATION */}
+        {/*  PAGINATION */}
         <div className="flex justify-center gap-6 mt-10">
 
           <button
