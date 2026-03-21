@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 
 const API_KEY = "77794b003c88f0df6567795dd3310419";
 const BASE_URL = "https://api.themoviedb.org/3";
@@ -14,22 +14,31 @@ export default function MovieDetails() {
   const [credits, setCredits] = useState({});
   const [page, setPage] = useState(1);
 
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  //  BACK FIX (NO RETYPE)
+  const backHandler = () => {
+    if (location.state?.fromSearch) {
+      navigate(-1);   
+  } else {
+    navigate(-1);
+  }
+  };
+
   useEffect(() => {
 
     const fetchData = async () => {
       try {
 
-        // 🎬 Movie Details
         const res1 = await fetch(`${BASE_URL}/movie/${id}?api_key=${API_KEY}`);
         const data1 = await res1.json();
         setMovie(data1);
 
-        // 👥 Credits
         const res2 = await fetch(`${BASE_URL}/movie/${id}/credits?api_key=${API_KEY}`);
         const data2 = await res2.json();
         setCredits(data2);
 
-        // 🎞️ Similar Movies (with pagination)
         const res3 = await fetch(`${BASE_URL}/movie/${id}/similar?api_key=${API_KEY}&page=${page}`);
         const data3 = await res3.json();
         setSimilar(data3.results || []);
@@ -45,16 +54,10 @@ export default function MovieDetails() {
 
   if (!movie) return <p className="text-white p-10">Loading...</p>;
 
-  // 🎬 Director
   const director = credits.crew?.find(c => c.job === "Director");
-
-  // 🌍 Country
   const country = movie.production_countries?.[0]?.name;
-
-  // 📅 Year
   const year = movie.release_date?.split("-")[0];
 
-  // 🌐 Language mapping
   const languageMap = {
     en: "English",
     hi: "Hindi",
@@ -66,13 +69,12 @@ export default function MovieDetails() {
   const language =
     languageMap[movie.original_language] || movie.original_language;
 
-  // ⭐ Rating
   const rating = movie.vote_average?.toFixed(1);
 
   return (
     <div className="text-white bg-black min-h-screen">
 
-      {/*  BACKDROP */}
+      {/* BACKDROP */}
       <div
         className="h-[80vh] bg-cover bg-center flex items-end"
         style={{
@@ -92,26 +94,25 @@ export default function MovieDetails() {
           </p>
 
           <div className="mt-4 space-y-1 text-gray-300">
-
             <p>⭐ Rating: {rating}</p>
             <p>📅 Year: {year || "N/A"}</p>
             <p>🎬 Director: {director?.name || "N/A"}</p>
             <p>🌍 Country: {country || "N/A"}</p>
             <p>🌐 Language: {language}</p>
-
           </div>
 
-          <Link
-            to="/"
+          {/*  FIXED BACK BUTTON */}
+          <button
+            onClick={backHandler}
             className="inline-block mt-5 bg-red-600 px-5 py-2 rounded hover:bg-red-700"
           >
             ⬅ Back to Home
-          </Link>
+          </button>
 
         </div>
       </div>
 
-      {/* 🎞️ RELATED MOVIES */}
+      {/* RELATED MOVIES */}
       <div className="p-6 bg-black">
 
         <h2 className="text-2xl mb-4">Related Movies</h2>
@@ -119,18 +120,30 @@ export default function MovieDetails() {
         <div className="flex overflow-x-scroll gap-5 scrollbar-hide">
 
           {similar.map((m) => (
-            <Link to={`/movie/${m.id}`} key={m.id}>
-            <img
-            src={`https://image.tmdb.org/t/p/w300${m.poster_path}`}
-            alt={m.title}
-            className="min-w-[180px] md:min-w-[220px] lg:min-w-[260px] h-[260px] md:h-[320px] lg:h-[360px] object-cover rounded-lg cursor-pointer hover:scale-110 transition duration-300"
-                    />
-            </Link>
-          ))};
-
+            <div
+              key={m.id}
+              onClick={() =>
+                navigate(`/movie/${m.id}`, {
+                  state: {
+                    query: location.state?.query,
+                    type: location.state?.type,
+                    page: location.state?.page,
+                    fromSearch: location.state?.fromSearch
+                  }
+                })
+              }
+            >
+              <img
+                src={`https://image.tmdb.org/t/p/w300${m.poster_path}`}
+                alt={m.title}
+                className="min-w-[180px] md:min-w-[220px] lg:min-w-[260px] h-[260px] md:h-[320px] lg:h-[360px] object-cover rounded-lg cursor-pointer hover:scale-110 transition duration-300"
+              />
             </div>
+          ))}
 
-        {/*  PAGINATION */}
+        </div>
+
+        {/* PAGINATION */}
         <div className="flex justify-center gap-6 mt-10">
 
           <button

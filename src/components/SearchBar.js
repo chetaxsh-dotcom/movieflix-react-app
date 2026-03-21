@@ -1,57 +1,75 @@
 import { useState, useEffect } from "react";
 
-export default function SearchBar({ onSearch }) {
+const SearchBar = ({ onSearch, initialQuery, initialType }) => {
 
-const [query,setQuery] = useState("");
-const [type,setType] = useState("");
+  const [input, setInput] = useState(initialQuery || "");
+  const [type, setType] = useState(initialType || "");
 
-//  AUTO SEARCH WHEN FILTER CHANGES
-useEffect(()=>{
-  if(type){
-    onSearch(query,type);
-  }
-},[type, query, onSearch]);
+  useEffect(() => {
+    setInput(initialQuery || "");
+    setType(initialType || "");
+  }, [initialQuery, initialType]);
 
-const handleSubmit = (e) => {
-  e.preventDefault();
-  onSearch(query,type);
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSearch(input, type, 1);
+  };
+
+  return (
+     <div className="w-full">
+
+    {/*  HEADER */}
+    <div className="flex items-center justify-between px-6 py-4 bg-black fixed top-0 left-0 w-full z-50">
+
+      {/* LEFT - APP NAME */}
+      <h1 className="text-red-600 text-2xl font-bold">
+        MovieFlix
+      </h1>
+
+      {/* CENTER - SEARCH */}
+      <form onSubmit={handleSubmit} className="flex gap-3">
+
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Search movies..."
+          className="px-4 py-2 rounded bg-gray-800 text-white w-[250px]"
+        />
+
+        <select
+          value={type}
+          onChange={(e) => setType(e.target.value)}
+          className="px-3 py-2 bg-gray-800 text-white rounded"
+        >
+          <option value="">All</option>
+          <option value="28">Action</option>
+          <option value="35">Comedy</option>
+          <option value="27">Horror</option>
+          <option value="80">Crime</option>
+          <option value="16">Animation</option>
+          <option value="18">Drama</option>
+        </select>
+
+        <button
+          type="submit"
+          className="bg-red-600 px-4 py-2 rounded text-white"
+        >
+          Search
+        </button>
+
+      </form>
+
+      {/* RIGHT EMPTY SPACE (for balance) */}
+      <div className="w-[100px]" />
+
+    </div>
+
+    {/*  SPACE FIX (important) */}
+    <div className="h-[80px]" />
+
+  </div>
+);
 };
 
-return(
-
-<form onSubmit={handleSubmit} className="flex gap-4 justify-center mb-6">
-
-<input
-type="text"
-placeholder="Search movies..."
-value={query}
-onChange={(e)=>setQuery(e.target.value)}
-className="px-4 py-2 rounded bg-gray-900 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-white-500" 
-/>
-
-<select
-value={type}
-onChange={(e)=>setType(e.target.value)}
-className="px-4 py-2 rounded bg-gray-900 text- border-gray-700 focus:ouline-none focus:ring-2 focus:ring-white-700 "
->
-
-<option value="">All</option>
-<option value="28">Action</option>
-<option value="35">Comedy</option>
-<option value="27">Horror</option>
-<option value="80">Crime</option>
-<option value="16">Animation</option>
-<option value="18">Drama</option>
-
-
-</select>
-
-<button className="bg-red-600 px-4 py-2 rounded hover:bg-red-700 transition">
-Search
-</button>
-
-</form>
-
-);
-
-}
+export default SearchBar;

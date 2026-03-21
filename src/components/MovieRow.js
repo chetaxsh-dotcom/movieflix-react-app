@@ -1,68 +1,85 @@
 import { useRef } from "react";
-import MovieCard from "./MovieCard";
+import { useNavigate } from "react-router-dom";
 
 export default function MovieRow({ title, movies }) {
 
-  const rowRef = useRef(null);
+const rowRef = useRef(null);
+const navigate = useNavigate();
 
-  if (!movies || movies.length === 0) return null;
+const scrollLeft = () => {
+  rowRef.current.scrollBy({
+    left: -400,
+    behavior: "smooth",
+  });
+};
 
-  const scrollLeft = () => {
-    if (!rowRef.current) return;
+const scrollRight = () => {
+  rowRef.current.scrollBy({
+    left: 400,
+    behavior: "smooth",
+  });
+}; 
 
-    rowRef.current.scrollBy({
-      left: -400,
-      behavior: "smooth",
-    });
-  };
+return (
 
-  const scrollRight = () => {
-    if (!rowRef.current) return;
+<div className="relative mb-10 group">
 
-    rowRef.current.scrollBy({
-      left: 400,
-      behavior: "smooth",
-    });
-  };
+{/* TITLE */}
+<h2 className="text-white text-2xl font-semibold mb-4 px-6">
+{title}
+</h2>
 
-  return (
-    <div className="relative mb-10 group">
+{/* LEFT BTN */}
+<button
+onClick={scrollLeft}
+className="absolute left-0 top-1/2 -translate-y-1/2 z-20 
+bg-black/70 text-white px-4 py-6 opacity-0 
+group-hover:opacity-100"
+>
+{"<"}
+</button>
 
-      {/* ROW TITLE */}
-      <h2 className="text-white text-2xl font-semibold mb-4 px-6">
-        {title}
-      </h2>
+{/* MOVIES */}
+<div
+ref={rowRef}
+className="flex space-x-4 overflow-x-auto z-10 scrollbar-hide px-14 scroll-smooth"
+>
 
-      {/* LEFT ARROW */}
-      <button
-        onClick={scrollLeft}
-        className="absolute left-0 top-1/2 -translate-y-1/2 z-20 
-        bg-black/70 text-white px-4 py-6 opacity-0 
-        group-hover:opacity-100 transition duration-300"
-      >
-        {"<"}
-      </button>
+{movies?.map((movie) => (
 
-      {/* MOVIE ROW */}
-      <div
-        ref={rowRef}
-        className="flex space-x-4 overflow-x-scroll scrollbar-hide px-14 scroll-smooth"
-      >
-        {movies.map((movie) => (
-          <MovieCard key={movie.id} movie={movie} />
-        ))}
-      </div>
+<div key={movie.id} className="min-w-[180px]">
 
-      {/* RIGHT ARROW */}
-      <button
-        onClick={scrollRight}
-        className="absolute right-0 top-1/2 -translate-y-1/2 z-20 
-        bg-black/70 text-white px-4 py-6 opacity-0 
-        group-hover:opacity-100 transition duration-300"
-      >
-        {">"}
-      </button>
+<div
+onClick={() => navigate(`/movie/${movie.id}`)}
+className="cursor-pointer"
+>
 
-    </div>
-  );
+<img
+src={`https://image.tmdb.org/t/p/w300${movie.poster_path}`}
+alt={movie.title}
+className="w-full rounded hover:scale-110 transition"
+/>
+
+</div>
+
+</div>
+
+))}
+
+</div>
+
+{/* RIGHT BTN */}
+<button
+onClick={scrollRight}
+className="absolute right-0 top-1/2 -translate-y-1/2 z-20 
+bg-black/70 text-white px-4 py-6 opacity-0 
+group-hover:opacity-100"
+>
+{">"}
+</button>
+
+</div>
+
+);
+
 }

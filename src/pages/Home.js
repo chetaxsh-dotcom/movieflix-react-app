@@ -1,171 +1,214 @@
 import { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import SearchBar from "../components/SearchBar";
 import MovieRow from "../components/MovieRow";
-import { useCallback } from "react";
-
 
 const API_KEY = "77794b003c88f0df6567795dd3310419";
 const BASE_URL = "https://api.themoviedb.org/3";
 
 export default function Home() {
 
-const [trending,setTrending] = useState([]);
-const [action,setAction] = useState([]);
-const [comedy,setComedy] = useState([]);
-const [horror,setHorror] = useState([]);
-const [crime,setCrime] = useState([]);
-const [animation,setAnimation] = useState([]);
-const [drama,setDrama] = useState([]);
+  const navigate = useNavigate();
+  const location = useLocation();
 
-//  MAIN STATES
-const [query,setQuery] = useState("");
-const [type,setType] = useState("");
+  //  STATES
+  const [query, setQuery] = useState("");
+  const [type, setType] = useState("");
+  const [page, setPage] = useState(1);
 
-const [searchResults,setSearchResults] = useState([]);
-const [isSearching,setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
 
-const [page,setPage] = useState(1);
+  // 🎬 categories
+  const [trending, setTrending] = useState([]);
+  const [action, setAction] = useState([]);
+  const [comedy, setComedy] = useState([]);
+  const [horror, setHorror] = useState([]);
+  const [crime, setCrime] = useState([]);
+  const [animation, setAnimation] = useState([]);
 
-// 🎬 CATEGORY FETCH
-const fetchMovies = async(url,setter)=>{
-  try{
+  //  SEARCH FETCH (REAL LOGIC)
+  const fetchSearch = async (q, t, p = 1) => {
+
+    if (!q && !t) {
+      setIsSearching(false);
+      setSearchResults([]);
+      return;
+    }
+
+    let url = "";
+
+    if (q) {
+      url = `${BASE_URL}/search/movie?api_key=${API_KEY}&query=${q}&page=${p}`;
+    } else {
+      url = `${BASE_URL}/discover/movie?api_key=${API_KEY}&with_genres=${t}&page=${p}`;
+    }
+
     const res = await fetch(url);
     const data = await res.json();
-    setter(data.results || []);
-  }catch(err){
-    console.error(err);
-  }
-};
 
-// 🎬 LOAD CATEGORY ROWS
-useEffect(()=>{
+    let results = data.results || [];
 
-fetchMovies(`${BASE_URL}/trending/movie/week?api_key=${API_KEY}&page=${page}`,setTrending);
+    //  combine filter WITHOUT .filter()
+    if (q && t) {
+      let filtered = [];
+      for (let i = 0; i < results.length; i++) {
+        if (results[i].genre_ids?.includes(Number(t))) {
+          filtered.push(results[i]);
+        }
+      }
+      results = filtered;
+    }
 
-fetchMovies(`${BASE_URL}/discover/movie?api_key=${API_KEY}&with_genres=28&page=${page}`,setAction);
+    setSearchResults(results);
+    setIsSearching(true);
+  };
 
-fetchMovies(`${BASE_URL}/discover/movie?api_key=${API_KEY}&with_genres=35&page=${page}`,setComedy);
+  //  HANDLE SEARCH (NAVIGATION BASED)
+  const handleSearch = (q, t, p = 1) => {
+    navigate("/", {
+      state: {
+        query: q,
+        type: t,
+        page: p,
+        fromSearch: true
+      }
+    });
+  };
 
-fetchMovies(`${BASE_URL}/discover/movie?api_key=${API_KEY}&with_genres=27&page=${page}`,setHorror);
+  //  HANDLE LOCATION STATE (MAIN FIX)
+  useEffect(() => {
 
-fetchMovies(`${BASE_URL}/discover/movie?api_key=${API_KEY}&with_genres=80,9648&page=${page}`,setCrime);
+    if (location.state?.fromSearch) {
 
-fetchMovies(`${BASE_URL}/discover/movie?api_key=${API_KEY}&with_genres=16&page=${page}`,setAnimation);
+      const { query, type, page } = location.state;
 
-fetchMovies(`${BASE_URL}/discover/movie?api_key=${API_KEY}&with_genres=18&page=${page}`,setDrama);
+      setQuery(query || "");
+      setType(type || "");
+      setPage(page || 1);
 
-},[page]);
+      fetchSearch(query, type, page);
+    }
 
-//  MAIN SEARCH + FILTER LOGIC (AUTO RUN)
-useEffect(()=>{
+  }, [location.state]);
 
-if(!query && !type){
-  setIsSearching(false);
-  return;
-}
+  //  HOMEPAGE FETCH
+  useEffect(() => {
 
-const fetchSearch = async()=>{
+    if (isSearching) return;
 
-try{
+    const fetchMovies = async (url, setter) => {
+      const res = await fetch(`${url}&page=${page}`);
+      const data = await res.json();
+      setter(data.results || []);
+    };
 
-let url = "";
+    fetchMovies(`${BASE_URL}/trending/movie/week?api_key=${API_KEY}`, setTrending);
+    fetchMovies(`${BASE_URL}/discover/movie?api_key=${API_KEY}&with_genres=28`, setAction);
+    fetchMovies(`${BASE_URL}/discover/movie?api_key=${API_KEY}&with_genres=35`, setComedy);
+    fetchMovies(`${BASE_URL}/discover/movie?api_key=${API_KEY}&with_genres=27`, setHorror);
+    fetchMovies(`${BASE_URL}/discover/movie?api_key=${API_KEY}&with_genres=80,9648`, setCrime);
+    fetchMovies(`${BASE_URL}/discover/movie?api_key=${API_KEY}&with_genres=16`, setAnimation);
 
-if(query){
-  url = `${BASE_URL}/search/movie?api_key=${API_KEY}&query=${query}&page=${page}`;
-}else{
-  url = `${BASE_URL}/discover/movie?api_key=${API_KEY}&with_genres=${type}&page=${page}`;
-}
+  }, [page, isSearching]);
 
-const res = await fetch(url);
-const data = await res.json();
+  return (
+    <div className="bg-black text-white min-h-screen pt-10">
 
-let results = data.results || [];
+      {/*  CENTER SEARCH */}
+      <SearchBar
+        onSearch={handleSearch}
+        initialQuery={query}
+        initialType={type}
+      />
 
-//  NO filter() used (as per requirement)
-if(query && type){
+      {isSearching ? (
 
-let filtered = [];
+        <div className="px-6 mt-6">
 
-for(let i=0;i<results.length;i++){
-  if(results[i].genre_ids?.includes(Number(type))){
-    filtered.push(results[i]);
-  }
-}
+          {/*  GRID */}
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
 
-results = filtered;
+            {searchResults.map((movie) => (
 
-}
+              <div
+                key={movie.id}
+                onClick={() => navigate(`/movie/${movie.id}`, {
+                  state: { query, type, page, fromSearch: true }
+                })}
+                className="cursor-pointer"
+              >
+                <img
+                  src={`https://image.tmdb.org/t/p/w300${movie.poster_path}`}
+                  className="w-full rounded"
+                  alt={movie.title}
+                />
+                <p className="text-sm mt-2">{movie.title}</p>
+              </div>
 
-setSearchResults(results);
-setIsSearching(true);
+            ))}
 
-}catch(err){
-console.error("Search error:",err);
-}
+          </div>
 
-};
+          {/*  SEARCH PAGINATION */}
+          <div className="flex justify-center gap-4 mt-8">
 
-fetchSearch();
+            <button
+              onClick={() => handleSearch(query, type, page - 1)}
+              disabled={page === 1}
+              className="bg-gray-800 px-4 py-2 rounded"
+            >
+              Prev
+            </button>
 
-},[query,type,page]);
+            <span>{page}</span>
 
-//  SEARCHBAR INPUT HANDLE
-const handleSearch = useCallback((q,t)=>{
-setQuery(q);
-setType(t);
-setPage(1); // reset page
-},[]);
+            <button
+              onClick={() => handleSearch(query, type, page + 1)}
+              className="bg-gray-800 px-4 py-2 rounded"
+            >
+              Next
+            </button>
 
-return(
+          </div>
 
-<div className="bg-black text-white min-h-screen pt-20">
+        </div>
 
-<SearchBar onSearch={handleSearch}/>
+      ) : (
 
-{isSearching ? (
+        <>
+          <MovieRow title="Trending Now" movies={trending}/>
+          <MovieRow title="Action Movies" movies={action}/>
+          <MovieRow title="Comedy Movies" movies={comedy}/>
+          <MovieRow title="Horror Movies" movies={horror}/>
+          <MovieRow title="Crime & Mystery" movies={crime}/>
+          <MovieRow title="Animation Movies" movies={animation}/>
 
-<MovieRow title="Search Results" movies={searchResults}/>
+          {/*  HOME PAGINATION */}
+          <div className="flex justify-center gap-4 mt-10">
 
-):( 
+            <button
+              onClick={() => setPage(page - 1)}
+              disabled={page === 1}
+              className="bg-gray-800 px-4 py-2 rounded"
+            >
+              Prev
+            </button>
 
-<>
+            <span>{page}</span>
 
-<MovieRow title="Trending Now" movies={trending}/>
-<MovieRow title="Action Movies" movies={action}/>
-<MovieRow title="Comedy Movies" movies={comedy}/>
-<MovieRow title="Horror Movies" movies={horror}/>
-<MovieRow title="Crime & Mystery" movies={crime}/>
-<MovieRow title="Animation Movies" movies={animation}/>
-<MovieRow title="Drama Movies" movies={drama}/>
+            <button
+              onClick={() => setPage(page + 1)}
+              className="bg-gray-800 px-4 py-2 rounded"
+            >
+              Next
+            </button>
 
-</>
+          </div>
+        </>
 
-)}
+      )}
 
-{/*  PAGINATION (WORKS FOR BOTH) */}
-<div className="flex justify-center gap-6 mt-10 pb-10">
-
-<button
-onClick={()=>setPage(page-1)}
-disabled={page===1}
-className="bg-gray-800 px-4 py-2 rounded"
->
-Prev
-</button>
-
-<span>{page}</span>
-
-<button
-onClick={()=>setPage(page+1)}
-className="bg-gray-800 px-4 py-2 rounded"
->
-Next
-</button>
-
-</div>
-
-</div>
-
-);
-
+    </div>
+  );
 }
