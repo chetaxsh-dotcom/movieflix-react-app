@@ -15,6 +15,7 @@ export default function Home() {
   const [query, setQuery] = useState("");
   const [type, setType] = useState("");
   const [page, setPage] = useState(1);
+  const [error, setError] = useState(false);
 
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -29,6 +30,9 @@ export default function Home() {
 
   //  SEARCH FETCH (REAL LOGIC)
   const fetchSearch = async (q, t, p = 1) => {
+
+  try {
+    setError(false);
 
     if (!q && !t) {
       setIsSearching(false);
@@ -45,11 +49,13 @@ export default function Home() {
     }
 
     const res = await fetch(url);
+
+    if (!res.ok) throw new Error("API failed");
+
     const data = await res.json();
 
     let results = data.results || [];
 
-    //  combine filter WITHOUT .filter()
     if (q && t) {
       let filtered = [];
       for (let i = 0; i < results.length; i++) {
@@ -62,7 +68,12 @@ export default function Home() {
 
     setSearchResults(results);
     setIsSearching(true);
-  };
+
+  } catch (err) {
+    console.error(err);
+    setError(true);  // 🔥 important
+  }
+};
 
   //  HANDLE SEARCH (NAVIGATION BASED)
   const handleSearch = (q, t, p = 1) => {
@@ -114,6 +125,11 @@ export default function Home() {
 
   return (
     <div className="bg-black text-white min-h-screen pt-10">
+      {error && (
+  <p className="text-red-500 text-center mt-10">
+    Failed to load movies. Please try again.
+  </p>
+)}
 
       {/*  CENTER SEARCH */}
       <SearchBar

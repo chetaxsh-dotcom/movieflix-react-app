@@ -13,6 +13,7 @@ export default function MovieDetails() {
   const [similar, setSimilar] = useState([]);
   const [credits, setCredits] = useState({});
   const [page, setPage] = useState(1);
+  const [error, setError] = useState(false);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -29,28 +30,41 @@ export default function MovieDetails() {
   useEffect(() => {
 
     const fetchData = async () => {
-      try {
+  try {
 
-        const res1 = await fetch(`${BASE_URL}/movie/${id}?api_key=${API_KEY}`);
-        const data1 = await res1.json();
-        setMovie(data1);
+    setError(false);
 
-        const res2 = await fetch(`${BASE_URL}/movie/${id}/credits?api_key=${API_KEY}`);
-        const data2 = await res2.json();
-        setCredits(data2);
+    const res1 = await fetch(`${BASE_URL}/movie/${id}?api_key=${API_KEY}`);
+    if (!res1.ok) throw new Error("Failed");
+    const data1 = await res1.json();
+    setMovie(data1);
 
-        const res3 = await fetch(`${BASE_URL}/movie/${id}/similar?api_key=${API_KEY}&page=${page}`);
-        const data3 = await res3.json();
-        setSimilar(data3.results || []);
+    const res2 = await fetch(`${BASE_URL}/movie/${id}/credits?api_key=${API_KEY}`);
+    if (!res2.ok) throw new Error("Failed");
+    const data2 = await res2.json();
+    setCredits(data2);
 
-      } catch (error) {
-        console.error("Error fetching details:", error);
-      }
-    };
+    const res3 = await fetch(`${BASE_URL}/movie/${id}/similar?api_key=${API_KEY}&page=${page}`);
+    if (!res3.ok) throw new Error("Failed");
+    const data3 = await res3.json();
+    setSimilar(data3.results || []);
 
+  } catch (err) {
+    console.error(err);
+    setError(true);
+  }
+};
     fetchData();
 
   }, [id, page]);
+
+  if (error) {
+  return (
+    <p className="text-red-500 text-center mt-10">
+      Failed to load movie details.
+    </p>
+  );
+}
 
   if (!movie) return <p className="text-white p-10">Loading...</p>;
 
